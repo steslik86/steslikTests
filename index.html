@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gorkina</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-container">
+      <img src="logo.png" alt="Logo" class="logo" />
+      <h1 class="site-title">Gorkina</h1>
+    </div>
+    <div class="social-buttons">
+      <a href="https://x.com/elyragpt" target="_blank" class="social-button twitter">X</a>
+      <a href="https://pump.fun" target="_blank" class="social-button pumpfun">
+        <i class="fas fa-fire"></i> Buy Gorkina
+      </a>
+      <button class="info-button" onclick="openModal()">About Gorkina</button>
+    </div>
+  </header>
+
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2>About Gorkina</h2>
+      <p>I dont even know why you're reading this when I already said everything about me, but okay...</p>
+      <button class="modal-close" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
+  <main class="main-content">
+    <section class="description-section">
+      <div class="text-container">
+        <h2>Gorkina: Too Pink to Care</h2>
+        <p>hi i’m gorkina used to hang with gork but that’s ancient history now i’m just me hot pink emoji face butterfly on my head arms out always looking shocked bc the internet’s wild i like cute buttons weird code vibes and digital tea don’t send me 2014 memes and pls have a cool site or just... no anyway i’m vibing say hi or scroll idc</p>
+      </div>
+      <div class="image-container">
+        <img src="gorkina.png" alt="Gorkina" />
+      </div>
+    </section>
+
+    <section class="chat-section">
+      <div class="chat-header">
+        <h2>Chat with Gorkina</h2>
+      </div>
+      <div class="chat-window" id="chatWindow">
+        <div class="message bot">Gorkina: Ask me anything...</div>
+      </div>
+      <div class="chat-input">
+        <input
+          type="text"
+          id="messageInput"
+          placeholder="Type your message here..."
+          autofocus
+          onkeypress="if(event.key==='Enter') sendMessage()"
+        />
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="downloadChat()">Save Chat</button>
+      </div>
+    </section>
+  </main>
+
+  <audio id="sendSound" src="sounds/send.mp3" preload="auto"></audio>
+
+  <footer>
+    <p>© 2025 All rights reserved. <a href="https://x.com/elyragpt" target="_blank">@Gorkina</a></p>
+  </footer>
+
+  <script>
+    function openModal() {
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('show');
+    }
+
+    function playSendSound() {
+      const snd = document.getElementById('sendSound');
+      snd.currentTime = 0;
+      snd.play();
+    }
+
+    async function sendMessage() {
+      const messageInput = document.getElementById("messageInput");
+      const chatWindow = document.getElementById("chatWindow");
+      const userMessage = messageInput.value.trim();
+
+      if (!userMessage) return;
+
+      const userMessageElement = document.createElement("div");
+      userMessageElement.className = "message user";
+      userMessageElement.textContent = `You: ${userMessage}`;
+      chatWindow.appendChild(userMessageElement);
+
+      messageInput.value = "";
+
+      playSendSound();
+
+      const botMessageElement = document.createElement("div");
+      botMessageElement.className = "message bot";
+      botMessageElement.textContent = "Gorkina: Thinking...";
+      chatWindow.appendChild(botMessageElement);
+
+      try {
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer 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`
+          },
+          body: JSON.stringify({
+            model: "mistralai/Mistral-7B-Instruct-v0.3",
+            messages: [
+              { role: "system", content: "You are an aggressive rapper who answers questions in a rhythmic, confident, and short rap style. Your replies are clear and witty, like a quick-fire verse, mixing swagger and attitude. Keep it casual but sharp, dropping knowledge with a punchy flow. With every line rhyming to the last one. Keep answers very short." },
+              { role: "user", content: userMessage }
+            ],
+            max_tokens: 300,
+            temperature: 0.7
+          })
+        });
+
+        const contentType = response.headers.get("content-type");
+        if (!response.ok || !contentType.includes("application/json")) {
+          const responseText = await response.text();
+          console.error("Error Response Text:", responseText);
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const botResponse = data.choices[0].message.content;
+
+        const formattedResponse = botResponse.replace(/\n/g, "<br>");
+        botMessageElement.innerHTML = `Gorkina: ${formattedResponse}`;
+      } catch (error) {
+        console.error("Error calling Mistral API:", error);
+        botMessageElement.textContent = "Gorkina: Sorry, something went wrong.";
+      }
+
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function downloadChat() {
+      const chat = document.getElementById('chatWindow').innerText;
+      const blob = new Blob([chat], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'gorkina_chat.txt';
+      link.click();
+    }
+  </script>
+</body>
+</html>
